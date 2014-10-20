@@ -1,11 +1,14 @@
+---------------------------------------------
+-- Local Ace3 Declarations
+---------------------------------------------
 AutoReply = LibStub("AceAddon-3.0"):NewAddon("AutoReply", "AceConsole-3.0", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoReply")
 
 --local AceGUI = LibStub("AceGUI-3.0")
 
-------------------------
+---------------------------------------------
 -- Configuration Options
-------------------------
+---------------------------------------------
 AutoReply.options = {
     name = "AutoReply",
     handler = AutoReply,
@@ -68,6 +71,9 @@ AutoReply.options = {
     },
 }
 
+---------------------------------------------
+-- Message and enable option defaults
+---------------------------------------------
 AutoReply.defaults = {
 	profile = {
 		AFKMessage = L["I'm afk!"],
@@ -83,6 +89,9 @@ AutoReply.defaults = {
 --mainFrame:SetTitle("Auto Reply")
 --mainFrame:SetStatusText("Welcome to main frame version 1.0")
 
+---------------------------------------------
+-- Initilize Database, Options, Chat Commands
+---------------------------------------------
 function AutoReply:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("AutoReplyDB", self.defaults, true)
 
@@ -94,6 +103,9 @@ function AutoReply:OnInitialize()
     self:Print("AutoReply Initialized")
 end
 
+---------------------------------------------
+-- Enable Event Registration
+---------------------------------------------
 function AutoReply:OnEnable()
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_GUILD_ACHIEVEMENT")
@@ -102,21 +114,41 @@ function AutoReply:OnEnable()
 	self:Print("AutoReply Enabled")
 end
 
+---------------------------------------------
+-- Unregister Events
+---------------------------------------------
 function AutoReply:OnDisable()
 	self:UnregisterEvent("CHAT_MSG_WHISPER")
 	self:UnregisterEvent("CHAT_MSG_GUILD_ACHIEVEMENT")
 	self:UnregisterEvent("CHAT_MSG_BN_WHISPER")
 end
 
+---------------------------------------------
+-- CHAT_MSG_WHISPER Event Handler
+--
+-- When a whisper comes from a character
+-- handle it
+---------------------------------------------
 function AutoReply:CHAT_MSG_WHISPER(_, msg, sender)
 	self:WhisperHandler(msg, sender)
 end
 
+---------------------------------------------
+-- CHAT_MSG_BN_WHISPER Event Handler
+--
+-- When a whisper comes from Battle.net
+-- handle it.
+---------------------------------------------
 function AutoReply:CHAT_MSG_BN_WHISPER(_, msg, ...)
 	local BNpresenceId = select(12, ...)
 	self:WhisperHandler(msg, BNpresenceId)
 end
 
+---------------------------------------------
+-- Logic to whisper depending on BNet or
+-- whisper and if the user is AFK or DND
+-- and if the whisper back is enabled for each
+---------------------------------------------
 function AutoReply:WhisperHandler(msg, sender)
 	-- Debug
 	self:Print("Msg: '"..msg.."'") -- Not used but testing it's useful
@@ -139,12 +171,22 @@ function AutoReply:WhisperHandler(msg, sender)
 	end
 end
 
+---------------------------------------------
+-- CHAT_MSG_GUILD_ACHIVEMENT Event Handler
+--
+-- If a guild member get's an achievement,
+-- display the GuildAchivMessage if
+-- the option is enabled.
+---------------------------------------------
 function AutoReply:CHAT_MSG_GUILD_ACHIEVEMENT()
 	if AutoReply.db.profile.enableGuildAchiv == true then
-		SendChatMessage(self.db.profile.GuildAchivMessage, string.upper("guild"))
+		SendChatMessage(self.db.profile.GuildAchivMessage, string.upper("guild")) 
 	end
 end
 
+---------------------------------------------
+-- Open options off slash commands
+---------------------------------------------
 function AutoReply:ChatCommand(input)
     if not input or input:trim() == "" then
         InterfaceOptionsFrame_OpenToCategory(self.optionsFrame)
