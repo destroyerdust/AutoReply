@@ -4,7 +4,7 @@
 AutoReply = LibStub("AceAddon-3.0"):NewAddon("AutoReply", "AceConsole-3.0", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoReply")
 
---local AceGUI = LibStub("AceGUI-3.0")
+local AceGUI = LibStub("AceGUI-3.0")
 
 ---------------------------------------------
 -- Configuration Options
@@ -68,6 +68,14 @@ AutoReply.options = {
             set = function(_, value) AutoReply.db.profile.enableGuildAchiv = value end,
             order = 6,
         },
+        reEnableInitScreen = {
+            type = "toggle",
+            name = "Enable/Disable Init Screen",
+            desc = "Dat Screen",
+            get = function() return AutoReply.db.profile.initScreen end,
+            set = function(_, value) AutoReply.db.profile.initScreen = value end,
+            order = 7,
+        },
     },
 }
 
@@ -82,12 +90,11 @@ AutoReply.defaults = {
 		enableDND = true,
 		GuildAchivMessage = L["Grats on Achievement!"],
 		enableGuildAchiv = true,
+        initScreen = true,
 	},
 }
 
---local mainFrame = AceGUI:Create("Frame")
---mainFrame:SetTitle("Auto Reply")
---mainFrame:SetStatusText("Welcome to main frame version 1.0")
+
 
 ---------------------------------------------
 -- Initilize Database, Options, Chat Commands
@@ -99,6 +106,67 @@ function AutoReply:OnInitialize()
     self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("AutoReply", "AutoReply")
     self:RegisterChatCommand("ar", "ChatCommand")
     self:RegisterChatCommand("AutoReply", "ChatCommand")
+
+
+    if AutoReply.db.profile.initScreen == true then
+        ---------------------------------------------
+        -- Initial Welcome Frame
+        --
+        -- TODO
+        ---------------------------------------------
+
+        local frame = AceGUI:Create("Frame")
+        frame:SetTitle("AutoReply Initial Setup")
+        frame:SetStatusText("AutoReply initialization screen. All settings can be changed in the addon options area.")
+        frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) AutoReply.db.profile.initScreen = false end)
+        frame:SetLayout("Flow")
+
+        local initText = AceGUI:Create("Label")
+        initText:SetText("Welcome to the AutoReply initilization window. This is the one time window to create custom messages, else the defaults will be used. These are changeable in the Addon Options area of the interface options.")
+        initText:SetFullWidth(frame)
+        frame:AddChild(initText)
+
+        local AFKEditbox = AceGUI:Create("EditBox")
+        AFKEditbox:SetLabel("Insert Custom AFK Message:")
+        AFKEditbox:SetText(AutoReply.db.profile.AFKMessage)
+        AFKEditbox:SetWidth(300)
+        AFKEditbox:SetCallback("OnEnterPressed", function(widget, event, text) AutoReply.db.profile.AFKMessage = text end)
+        frame:AddChild(AFKEditbox)
+
+        local AFKEnableDisable = AceGUI:Create("CheckBox")
+        AFKEnableDisable:SetLabel("Enable/Disable AFK Message Reply")
+        AFKEnableDisable:SetValue(AutoReply.db.profile.enableAFK)
+        AFKEnableDisable:SetCallback("OnValueChanged", function(widget, event, value) AutoReply.db.profile.enableAFK = value end)
+        frame:AddChild(AFKEnableDisable)
+
+        local DNDEditbox = AceGUI:Create("EditBox")
+        DNDEditbox:SetLabel("Insert Custom DND Message:")
+        DNDEditbox:SetText(AutoReply.db.profile.DNDMessage)
+        DNDEditbox:SetWidth(300)
+        DNDEditbox:SetCallback("OnEnterPressed", function(widget, event, text) AutoReply.db.profile.DNDMessage = text end)
+        frame:AddChild(DNDEditbox)
+
+        local DNDEnableDisable = AceGUI:Create("CheckBox")
+        DNDEnableDisable:SetLabel("Enable/Disable DND Message Reply")
+        DNDEnableDisable:SetValue(AutoReply.db.profile.enableDND)
+        DNDEnableDisable:SetCallback("OnValueChanged", function(widget, event, value) AutoReply.db.profile.enableDND = value end)
+        frame:AddChild(DNDEnableDisable)
+
+        local GuilAchivEditbox = AceGUI:Create("EditBox")
+        GuilAchivEditbox:SetLabel("Insert Custom Guild Achievement Message:")
+        GuilAchivEditbox:SetText(AutoReply.db.profile.GuildAchivMessage)
+        GuilAchivEditbox:SetWidth(300)
+        GuilAchivEditbox:SetCallback("OnEnterPressed", function(widget, event, text) AutoReply.db.profile.GuildAchivMessage = text end)
+        frame:AddChild(GuilAchivEditbox)
+
+        local GuildAchivEnableDisable = AceGUI:Create("CheckBox")
+        GuildAchivEnableDisable:SetLabel("Enable/Disable Guild Achievement Message Reply")
+        GuildAchivEnableDisable:SetValue(AutoReply.db.profile.enableGuildAchiv)
+        GuildAchivEnableDisable:SetCallback("OnValueChanged", function(widget, event, value) AutoReply.db.profile.enableGuildAchiv = value end)
+        frame:AddChild(GuildAchivEnableDisable)
+
+    end
+
 
     self:Print("AutoReply Initialized")
 end
@@ -129,8 +197,14 @@ end
 -- When a whisper comes from a character
 -- handle it
 ---------------------------------------------
-function AutoReply:CHAT_MSG_WHISPER(_, msg, sender)
-	self:WhisperHandler(msg, sender)
+function AutoReply:CHAT_MSG_WHISPER(_, msg, sender,_,_,_,_,_,_,_,_,_,guid)
+    --self:Print("GUID: '"..guid.."'")
+    if guid ~= UnitGUID("player") then
+	   self:WhisperHandler(msg, sender)
+        --self:Print("Message Sent - Not self")
+    else
+        --self:Print("Don't want to send messages to self cause bad")
+    end
 end
 
 ---------------------------------------------
@@ -151,8 +225,8 @@ end
 ---------------------------------------------
 function AutoReply:WhisperHandler(msg, sender)
 	-- Debug
-	self:Print("Msg: '"..msg.."'") -- Not used but testing it's useful
-	self:Print("Sender: '"..sender.."'")
+	--self:Print("Msg: '"..msg.."'") -- Not used but testing it's useful
+	--self:Print("Sender: '"..sender.."'")
 	--
 
 	if type(sender) == "number" and select(7, BNGetFriendInfoByID(sender)) then
