@@ -1,0 +1,15 @@
+## Interface: 60000
+## Title: AutoReply Addon
+## Notes: This addon will auto reply based off slash commands.
+## Author: Sean Barkley
+## Website: www.seanbarkley.com
+## Version: 0.1
+## SavedVariables: AutoReplyDB
+## OptionalDeps: Ace3
+## X-Embeds: Ace3
+
+embeds.xml
+
+enUS.lua
+
+AutoReply.lua
